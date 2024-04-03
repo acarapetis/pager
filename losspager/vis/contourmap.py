@@ -287,7 +287,7 @@ def draw_contour(
       Grid2D object containing population data.
     :param oceanfile:
       String path to file containing ocean vector data in a format compatible
-      with fiona.
+      with fiona. If None, we use naturalearth ocean 10m.
     :param oceangridfile:
       String path to file containing ocean grid data .
     :param cityfile:
@@ -409,15 +409,19 @@ def draw_contour(
             facecolor="none",
         )
 
-    # clip the ocean data to the shakemap
-    bbox = (gd.xmin, gd.ymin, gd.xmax, gd.ymax)
-    oceanshapes = _clip_bounds(bbox, oceanfile)
+    if oceanfile is not None:
+        # clip the ocean data to the shakemap
+        bbox = (gd.xmin, gd.ymin, gd.xmax, gd.ymax)
+        oceanshapes = _clip_bounds(bbox, oceanfile)
+        ocean = ShapelyFeature(oceanshapes, crs=geoproj)
+    else:
+        ocean = cfeature.NaturalEarthFeature(
+            category="physical",
+            name="ocean",
+            scale="10m",
+        )
 
-    ax.add_feature(
-        ShapelyFeature(oceanshapes, crs=geoproj),
-        facecolor=WATERCOLOR,
-        zorder=OCEAN_ZORDER,
-    )
+    ax.add_feature(ocean, facecolor=WATERCOLOR, zorder=OCEAN_ZORDER)
 
     # So here we're going to project the MMI data to
     # our mercator map, then smooth and contour that
